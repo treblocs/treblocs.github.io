@@ -163,8 +163,9 @@
 
         /* Custom Box/Line Score Specific Styles */
         .linescore-wrapper {
-            max-width: 600px;
+            max-width: 850px; /* Increased from 600px to accommodate inning columns smoothly */
             margin: 0 auto;
+            overflow-x: auto; /* Ensures readability on small mobile formats */
         }
 
         .linescore-table th, .linescore-table td {
@@ -174,7 +175,6 @@
         .linescore-table th:first-child, .linescore-table td:first-child {
             text-align: left !important;
             font-weight: bold;
-            color: var(--primary-color);
         }
 
         .team-section-title {
@@ -184,6 +184,7 @@
             font-weight: 700;
             font-size: 1.1rem;
             border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* Box Notes Styling */
@@ -329,6 +330,53 @@
 </div>
 
 <script>
+    const teamColorsMap = {
+        'angels': { bg: '#ba0021', text: '#ffffff' },
+        'astros': { bg: '#002d62', text: '#ffffff' },
+        'athletics': { bg: '#003831', text: '#ffffff' },
+        'blue jays': { bg: '#134a8e', text: '#ffffff' },
+        'braves': { bg: '#13274f', text: '#ffffff' },
+        'brewers': { bg: '#12284c', text: '#ffffff' },
+        'cardinals': { bg: '#c41e3a', text: '#ffffff' },
+        'cubs': { bg: '#0e3386', text: '#ffffff' },
+        'd-backs': { bg: '#a71930', text: '#ffffff' },
+        'diamondbacks': { bg: '#a71930', text: '#ffffff' },
+        'dodgers': { bg: '#005a9c', text: '#ffffff' },
+        'giants': { bg: '#fd5a1e', text: '#ffffff' },
+        'guardians': { bg: '#0c2340', text: '#ffffff' },
+        'mariners': { bg: '#0c2c56', text: '#ffffff' },
+        'marlins': { bg: '#00a3e0', text: '#ffffff' },
+        'mets': { bg: '#002d62', text: '#ffffff' },
+        'nationals': { bg: '#ab0003', text: '#ffffff' },
+        'orioles': { bg: '#df4601', text: '#ffffff' },
+        'padres': { bg: '#2f241d', text: '#ffffff' },
+        'phillies': { bg: '#e81828', text: '#ffffff' },
+        'pirates': { bg: '#fdb827', text: '#000000' },
+        'rangers': { bg: '#003278', text: '#ffffff' },
+        'rays': { bg: '#092c5c', text: '#ffffff' },
+        'red sox': { bg: '#bd3039', text: '#ffffff' },
+        'reds': { bg: '#c6011f', text: '#ffffff' },
+        'rockies': { bg: '#333366', text: '#ffffff' },
+        'royals': { bg: '#004687', text: '#ffffff' },
+        'tigers': { bg: '#0c2340', text: '#ffffff' },
+        'twins': { bg: '#002b5c', text: '#ffffff' },
+        'white sox': { bg: '#27251f', text: '#ffffff' },
+        'yankees': { bg: '#0c2340', text: '#ffffff' },
+        '66ers': { bg: '#e31837', text: '#ffffff' },
+        'quakes': { bg: '#005a9c', text: '#ffffff' }
+    };
+
+    function getTeamColors(teamName) {
+        if (!teamName) return { bg: '#1e293b', text: '#ffffff' };
+        const nameLower = teamName.toLowerCase();
+        for (const key in teamColorsMap) {
+            if (nameLower.includes(key)) {
+                return teamColorsMap[key];
+            }
+        }
+        return { bg: '#1e293b', text: '#ffffff' };
+    }
+
     document.getElementById('game-select').addEventListener('change', function() {
         const gamePk = this.value;
         if (!gamePk) {
@@ -336,38 +384,33 @@
             return;
         }
 
-
-	if (gamePk === 'A101') {
-	    document.getElementById('stats-content').style.display = 'none';
-	    document.getElementById('loading').style.display = 'none';
-	    document.getElementById('error-msg').innerHTML = 'Click here for <a href="https://npb.jp/bis/eng/2025/games/s2025061700926.html" target="_blank" style="color: inherit; font-weight: 700; text-decoration: underline;">Official NPB Box Score</a>. Unable to access Nippon Professional Baseball (NPB) stats.';
-	    document.getElementById('error-msg').style.display = 'block';
-	    return; // Stops the function from running the fetch below
-	}
-
-	if (gamePk === 'A102') {
-	    document.getElementById('stats-content').style.display = 'none';
-	    document.getElementById('loading').style.display = 'none';
-	    document.getElementById('error-msg').innerHTML = 'Click here for <a href="https://npb.jp/bis/eng/2025/games/s2025061800932.html" target="_blank" style="color: inherit; font-weight: 700; text-decoration: underline;">Official NPB Box Score</a>. Unable to access Nippon Professional Baseball (NPB) stats.';
-	    document.getElementById('error-msg').style.display = 'block';
-	    return; // Stops the function from running the fetch below
-	}
-
+        if (gamePk === 'A101' || gamePk === 'A102') {
+            const url = gamePk === 'A101' ? 's2025061700926' : 's2025061800932';
+            document.getElementById('stats-content').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-msg').innerHTML = `Click here for <a href="https://npb.jp/bis/eng/2025/games/${url}.html" target="_blank" style="color: inherit; font-weight: 700; text-decoration: underline;">Official NPB Box Score</a>. Unable to access Nippon Professional Baseball (NPB) stats.`;
+            document.getElementById('error-msg').style.display = 'block';
+            return; 
+        }
 
         document.getElementById('loading').style.display = 'block';
         document.getElementById('error-msg').style.display = 'none';
         document.getElementById('stats-content').style.display = 'none';
 
-        fetch(`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response failed');
-                return response.json();
+        const boxscoreUrl = `https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`;
+        const linescoreUrl = `https://statsapi.mlb.com/api/v1/game/${gamePk}/linescore`;
+
+        // Fetching both endpoints concurrently
+        Promise.all([fetch(boxscoreUrl), fetch(linescoreUrl)])
+            .then(responses => {
+                if (!responses[0].ok || !responses[1].ok) throw new Error('Network response failed');
+                return Promise.all(responses.map(res => res.json()));
             })
-            .then(data => {
-                renderLineScore(data);
-                renderBoxNotes(data);
-                renderBatting(data);
-                renderPitching(data);
+            .then(([boxData, lineData]) => {
+                renderLineScore(boxData, lineData);
+                renderBoxNotes(boxData);
+                renderBatting(boxData);
+                renderPitching(boxData);
                 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('stats-content').style.display = 'block';
@@ -380,15 +423,52 @@
             });
     });
 
-    function renderLineScore(data) {
+    function renderLineScore(boxData, lineData) {
         const table = document.getElementById('linescore');
-        const teams = data.teams;
+        const teams = boxData.teams;
+        const innings = lineData.innings || [];
+        
+        // Ensure at least 9 inning columns are shown structurally, but adapt if it's an extra-inning game
+        const numInnings = Math.max(9, innings.length);
+        
+        const awayColors = getTeamColors(teams.away.team.name);
+        const homeColors = getTeamColors(teams.home.team.name);
+        
+        // 1. Generate Header Inning Labels dynamically
+        let inningHeadersHtml = '';
+        for (let i = 1; i <= numInnings; i++) {
+            inningHeadersHtml += `<th>${i}</th>`;
+        }
+
+        // 2. Generate Inning Scores for the Away Team Row
+        let awayInningsHtml = '';
+        for (let i = 0; i < numInnings; i++) {
+            const runVal = innings[i]?.away?.runs;
+            // Handle placeholders if the inning has not occurred or data is missing
+            awayInningsHtml += `<td>${runVal !== undefined ? runVal : '-'}</td>`;
+        }
+
+        // 3. Generate Inning Scores for the Home Team Row
+        let homeInningsHtml = '';
+        for (let i = 0; i < numInnings; i++) {
+            const runVal = innings[i]?.home?.runs;
+            // Safely render an 'X' if the home team didn't need to bat in the bottom of the 9th
+            let displaysVal = '-';
+            if (runVal !== undefined) {
+                displaysVal = runVal;
+            } else if (i === 8 && innings[i]?.away?.runs !== undefined && lineData.isTopInning === false) {
+                // Adjusts cleanly if game concluded top of the 9th
+                displaysVal = 'X';
+            }
+            homeInningsHtml += `<td>${displaysVal}</td>`;
+        }
         
         table.innerHTML = `
             <thead>
                 <tr>
                     <th>Team</th>
-                    <th>R</th>
+                    ${inningHeadersHtml}
+                    <th style="background-color: #334155;">R</th>
                     <th>H</th>
                     <th>E</th>
                     <th>LOB</th>
@@ -396,15 +476,17 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>${teams.away.team.name}</td>
-                    <td>${teams.away.teamStats.batting.runs}</td>
+                    <td style="color: ${awayColors.bg}; font-weight: 800;">${teams.away.team.name}</td>
+                    ${awayInningsHtml}
+                    <td style="font-weight: bold; background: #f8fafc;">${teams.away.teamStats.batting.runs}</td>
                     <td>${teams.away.teamStats.batting.hits}</td>
                     <td>${teams.away.teamStats.fielding.errors}</td>
                     <td>${teams.away.teamStats.batting.leftOnBase}</td>
                 </tr>
                 <tr>
-                    <td>${teams.home.team.name}</td>
-                    <td>${teams.home.teamStats.batting.runs}</td>
+                    <td style="color: ${homeColors.bg}; font-weight: 800;">${teams.home.team.name}</td>
+                    ${homeInningsHtml}
+                    <td style="font-weight: bold; background: #f8fafc;">${teams.home.teamStats.batting.runs}</td>
                     <td>${teams.home.teamStats.batting.hits}</td>
                     <td>${teams.home.teamStats.fielding.errors}</td>
                     <td>${teams.home.teamStats.batting.leftOnBase}</td>
@@ -417,7 +499,6 @@
         const container = document.getElementById('box-notes-container');
         container.innerHTML = ''; 
 
-        // 1. Parse top-level global game notes (Venue, Umpires, Weather if available in boxscore context)
         if (data.info && Array.isArray(data.info)) {
             const card = document.createElement('div');
             card.className = 'notes-card';
@@ -436,14 +517,15 @@
             if (card.children.length > 1) container.appendChild(card);
         }
 
-        // 2. Parse Away and Home strategic data blocks (e.g., HR, TB, RBI, Team DP details)
         ['away', 'home'].forEach(side => {
             const teamData = data.teams[side];
+            const colors = getTeamColors(teamData.team.name);
+            
             if (teamData.info && Array.isArray(teamData.info)) {
                 teamData.info.forEach(section => {
                     const card = document.createElement('div');
                     card.className = 'notes-card';
-                    card.innerHTML = `<div class="notes-section-title">${teamData.team.name} - ${section.title}</div>`;
+                    card.innerHTML = `<div class="notes-section-title" style="color: ${colors.bg}; border-bottom-color: ${colors.bg};">${teamData.team.name} - ${section.title}</div>`;
 
                     if (section.fieldList && Array.isArray(section.fieldList)) {
                         section.fieldList.forEach(field => {
@@ -465,11 +547,15 @@
 
         ['away', 'home'].forEach(side => {
             const teamData = data.teams[side];
+            const colors = getTeamColors(teamData.team.name);
+            
             const card = document.createElement('div');
             card.className = 'card';
 
             const title = document.createElement('div');
             title.className = 'team-section-title';
+            title.style.backgroundColor = colors.bg;
+            title.style.color = colors.text;
             title.innerHTML = `${teamData.team.name}`;
             card.appendChild(title);
 
@@ -518,11 +604,15 @@
 
         ['away', 'home'].forEach(side => {
             const teamData = data.teams[side];
+            const colors = getTeamColors(teamData.team.name);
+            
             const card = document.createElement('div');
             card.className = 'card';
 
             const title = document.createElement('div');
             title.className = 'team-section-title';
+            title.style.backgroundColor = colors.bg;
+            title.style.color = colors.text;
             title.innerHTML = `${teamData.team.name}`;
             card.appendChild(title);
 
