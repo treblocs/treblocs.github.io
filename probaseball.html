@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rylan's Pro Baseball Game Viewer</title>
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #2563eb;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --table-header: #1e293b;
+            --badge-bg: #f8fafc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 30px 15px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .selector-box {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.05rem;
+        }
+
+        select {
+            padding: 12px 16px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: var(--accent-color);
+            background-color: var(--card-bg);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Dashboard Layout Components */
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 6px;
+            margin: 40px 0 20px 0;
+            display: inline-block;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+        }
+
+        @media(max-width: 1100px) {
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--table-header);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        th:not(:first-child), td:not(:first-child) {
+            text-align: right;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Custom Box/Line Score Specific Styles */
+        .linescore-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .linescore-table th, .linescore-table td {
+            text-align: center !important;
+        }
+
+        .linescore-table th:first-child, .linescore-table td:first-child {
+            text-align: left !important;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .team-section-title {
+            background: #e2e8f0;
+            color: var(--primary-color);
+            padding: 12px 16px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Box Notes Styling */
+        .box-notes-container {
+            max-width: 800px;
+            margin: 30px auto 0 auto;
+        }
+
+        .notes-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .notes-section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .note-item {
+            font-size: 13.5px;
+            margin-bottom: 8px;
+            line-height: 1.45;
+            color: var(--text-main);
+        }
+
+        .note-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .note-label {
+            font-weight: 700;
+            color: var(--primary-color);
+            background: var(--badge-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* System States */
+        .loading-container {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            display: none;
+            color: #b91c1c;
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚾ Rylan's Pro Baseball Game Viewer</h1>
+        <p class="subtitle">Data from the MLB Stats API</p>
+    </header>
+    
+    <div class="selector-box">
+        <label for="game-select">Choose a Matchup</label>
+        <select id="game-select">
+            <option value="">-- Select a Game --</option>
+            <option value="823231">4/22/26 :Los Angeles Dodgers @ San Francisco Giants</option>
+            <option value="823236">4/21/26: Los Angeles Dodgers @ San Francisco Giants</option>
+            <option value="823242">4/2/26: New York Mets @ San Francisco Giants</option>
+            <option value="776350">9/12/25: Los Angeles Dodgers @ San Francisco Giants</option>
+            <option value="777034">7/23/25: Anaheim Angeles @ New York Mets</option>
+            <option value="777122">7/13/25: Chicago Cubs @ New York Yankees</option>
+            <option value="777257">7/3/25: Milwaukee Brewers @ New York Mets</option>
+            <option value="A102">6/18/25: Rakuten Golden Eagles @ Yakult Swallows</option>
+            <option value="A101">6/17/25: Rakuten Golden Eagles @ Yakult Swallows</option>
+            <option value="717258">7/25/23: Pittsburg Pirates @ Padres</option>
+            <option value="717471">7/6/23: Texas Rangers @ Boston Red Sox</option>
+            <option value="717535">7/1/23: San Francisco Giants @ New York Mets</option>
+            <option value="717581">6/28/23: Milwaukee Brewers @ New York Mets</option>
+            <option value="670849">6/16/22: Inland Empire 66ers @ Rancho Cucamonga Quakes</option>
+            <option value="633217">7/21/21: San Francisco Giants @ Los Angeles Dodgers</option>
+            <option value="447741">6/7/16: Anaheim Angeles @ New York Yankees</option>
+            <option value="381965">7/13/14: Oakland Athletics @ Seattle Mariners</option>
+            <option value="381821">7/3/14: St. Louis Cardinals @ San Francisco Giants</option>
+            <option value="379709">10/7/13: Atlanta Braves @ Los Angeles Dodgers</option>
+        </select>
+    </div>
+
+    <div id="loading" class="loading-container">
+        <div class="spinner"></div>
+        <div style="color: var(--text-muted); font-weight: 500;">Fetching API payloads...</div>
+    </div>
+    
+    <div id="error-msg" class="error"></div>
+
+    <div id="stats-content" style="display: none;">
+        <div style="text-align: center;">
+            <h2>Linescore Box</h2>
+        </div>
+        <div class="card linescore-wrapper">
+            <table class="linescore-table" id="linescore"></table>
+        </div>
+
+        <div id="box-notes-container" class="box-notes-container"></div>
+
+        <h2>Batting Performance</h2>
+        <div id="batting-container" class="team-grid"></div>
+
+        <h2>Pitching Hierarchy</h2>
+        <div id="pitching-container" class="team-grid"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('game-select').addEventListener('change', function() {
+        const gamePk = this.value;
+        if (!gamePk) {
+            document.getElementById('stats-content').style.display = 'none';
+            return;
+        }
+
+
+	if (gamePk === 'A101') {
+	    document.getElementById('stats-content').style.display = 'none';
+	    document.getElementById('loading').style.display = 'none';
+	    document.getElementById('error-msg').innerHTML = 'Click here for <a href="https://npb.jp/bis/eng/2025/games/s2025061700926.html" target="_blank" style="color: inherit; font-weight: 700; text-decoration: underline;">Official NPB Box Score</a>. Unable to access Nippon Professional Baseball (NPB) stats.';
+	    document.getElementById('error-msg').style.display = 'block';
+	    return; // Stops the function from running the fetch below
+	}
+
+	if (gamePk === 'A102') {
+	    document.getElementById('stats-content').style.display = 'none';
+	    document.getElementById('loading').style.display = 'none';
+	    document.getElementById('error-msg').innerHTML = 'Click here for <a href="https://npb.jp/bis/eng/2025/games/s2025061800932.html" target="_blank" style="color: inherit; font-weight: 700; text-decoration: underline;">Official NPB Box Score</a>. Unable to access Nippon Professional Baseball (NPB) stats.';
+	    document.getElementById('error-msg').style.display = 'block';
+	    return; // Stops the function from running the fetch below
+	}
+
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('error-msg').style.display = 'none';
+        document.getElementById('stats-content').style.display = 'none';
+
+        fetch(`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response failed');
+                return response.json();
+            })
+            .then(data => {
+                renderLineScore(data);
+                renderBoxNotes(data);
+                renderBatting(data);
+                renderPitching(data);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('stats-content').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-msg').textContent = 'Failed to fetch game data from MLB Stats engine. Please retry.';
+                document.getElementById('error-msg').style.display = 'block';
+            });
+    });
+
+    function renderLineScore(data) {
+        const table = document.getElementById('linescore');
+        const teams = data.teams;
+        
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>R</th>
+                    <th>H</th>
+                    <th>E</th>
+                    <th>LOB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${teams.away.team.name}</td>
+                    <td>${teams.away.teamStats.batting.runs}</td>
+                    <td>${teams.away.teamStats.batting.hits}</td>
+                    <td>${teams.away.teamStats.fielding.errors}</td>
+                    <td>${teams.away.teamStats.batting.leftOnBase}</td>
+                </tr>
+                <tr>
+                    <td>${teams.home.team.name}</td>
+                    <td>${teams.home.teamStats.batting.runs}</td>
+                    <td>${teams.home.teamStats.batting.hits}</td>
+                    <td>${teams.home.teamStats.fielding.errors}</td>
+                    <td>${teams.home.teamStats.batting.leftOnBase}</td>
+                </tr>
+            </tbody>
+        `;
+    }
+
+    function renderBoxNotes(data) {
+        const container = document.getElementById('box-notes-container');
+        container.innerHTML = ''; 
+
+        // 1. Parse top-level global game notes (Venue, Umpires, Weather if available in boxscore context)
+        if (data.info && Array.isArray(data.info)) {
+            const card = document.createElement('div');
+            card.className = 'notes-card';
+            card.innerHTML = `<div class="notes-section-title">Game Information</div>`;
+            
+            data.info.forEach(item => {
+                if (item.label || item.value) {
+                    const div = document.createElement('div');
+                    div.className = 'note-item';
+                    div.innerHTML = item.label 
+                        ? `<span class="note-label">${item.label}</span> ${item.value}` 
+                        : `${item.value}`;
+                    card.appendChild(div);
+                }
+            });
+            if (card.children.length > 1) container.appendChild(card);
+        }
+
+        // 2. Parse Away and Home strategic data blocks (e.g., HR, TB, RBI, Team DP details)
+        ['away', 'home'].forEach(side => {
+            const teamData = data.teams[side];
+            if (teamData.info && Array.isArray(teamData.info)) {
+                teamData.info.forEach(section => {
+                    const card = document.createElement('div');
+                    card.className = 'notes-card';
+                    card.innerHTML = `<div class="notes-section-title">${teamData.team.name} - ${section.title}</div>`;
+
+                    if (section.fieldList && Array.isArray(section.fieldList)) {
+                        section.fieldList.forEach(field => {
+                            const div = document.createElement('div');
+                            div.className = 'note-item';
+                            div.innerHTML = `<span class="note-label">${field.label}</span> ${field.value}`;
+                            card.appendChild(div);
+                        });
+                        container.appendChild(card);
+                    }
+                });
+            }
+        });
+    }
+
+    function renderBatting(data) {
+        const container = document.getElementById('batting-container');
+        container.innerHTML = ''; 
+
+        ['away', 'home'].forEach(side => {
+            const teamData = data.teams[side];
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const title = document.createElement('div');
+            title.className = 'team-section-title';
+            title.innerHTML = `${teamData.team.name}`;
+            card.appendChild(title);
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Batter</th>
+                        <th>AB</th>
+                        <th>R</th>
+                        <th>H</th>
+                        <th>RBI</th>
+                        <th>BB</th>
+                        <th>SO</th>
+                        <th>AVG</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${teamData.batters.map(id => {
+                        const player = teamData.players['ID' + id];
+                        const b = player.stats.batting;
+                        if (b.atBats === undefined) return ''; 
+                        return `
+                            <tr>
+                                <td><strong>${player.person.fullName}</strong> (${player.position.abbreviation})</td>
+                                <td>${b.atBats ?? 0}</td>
+                                <td>${b.runs ?? 0}</td>
+                                <td>${b.hits ?? 0}</td>
+                                <td>${b.rbi ?? 0}</td>
+                                <td>${b.baseOnBalls ?? 0}</td>
+                                <td>${b.strikeOuts ?? 0}</td>
+                                <td style="color: var(--text-muted); font-weight:600;">${player.seasonStats.batting.avg ?? '.000'}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            `;
+            card.appendChild(table);
+            container.appendChild(card);
+        });
+    }
+
+    function renderPitching(data) {
+        const container = document.getElementById('pitching-container');
+        container.innerHTML = ''; 
+
+        ['away', 'home'].forEach(side => {
+            const teamData = data.teams[side];
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const title = document.createElement('div');
+            title.className = 'team-section-title';
+            title.innerHTML = `${teamData.team.name}`;
+            card.appendChild(title);
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Pitcher</th>
+                        <th>IP</th>
+                        <th>H</th>
+                        <th>R</th>
+                        <th>ER</th>
+                        <th>BB</th>
+                        <th>SO</th>
+                        <th>HR</th>
+                        <th>ERA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${teamData.pitchers.map(id => {
+                        const player = teamData.players['ID' + id];
+                        const p = player.stats.pitching;
+                        if (p.inningsPitched === undefined) return '';
+                        return `
+                            <tr>
+                                <td><strong>${player.person.fullName}</strong></td>
+                                <td>${p.inningsPitched}</td>
+                                <td>${p.hits ?? 0}</td>
+                                <td>${p.runs ?? 0}</td>
+                                <td>${p.earnedRuns ?? 0}</td>
+                                <td>${p.baseOnBalls ?? 0}</td>
+                                <td>${p.strikeOuts ?? 0}</td>
+                                <td>${p.homeRuns ?? 0}</td>
+                                <td style="color: var(--text-muted); font-weight:600;">${player.seasonStats.pitching.era ?? '-.--'}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            `;
+            card.appendChild(table);
+            container.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>
